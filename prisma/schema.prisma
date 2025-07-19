@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model alert_types {
+  id          BigInt   @id @default(autoincrement())
+  name        String   @db.VarChar
+  description String?  @db.VarChar
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  alerts      alerts[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model alerts {
+  id                 BigInt              @id @default(autoincrement())
+  user_id            BigInt?
+  contact_id         BigInt?
+  alert_type_id      BigInt?
+  dive_type_id       BigInt?
+  location_lat       Float?
+  location_lng       Float?
+  created_at         DateTime            @default(now()) @db.Timestamptz(6)
+  message_sent       Boolean?
+  active             Boolean?            @default(true)
+  call_made          Boolean?
+  alert_types        alert_types?        @relation(fields: [alert_type_id], references: [id], onDelete: Cascade)
+  emergency_contacts emergency_contacts? @relation(fields: [contact_id], references: [id], onDelete: Cascade)
+  device_types       device_types?       @relation(fields: [dive_type_id], references: [id], onDelete: Cascade)
+  users              users?              @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model device_types {
+  id          BigInt   @id @default(autoincrement())
+  name        String   @db.VarChar
+  description String?  @db.VarChar
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  alerts      alerts[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model emergency_contacts {
+  id           BigInt   @id @default(autoincrement())
+  created_at   DateTime @default(now()) @db.Timestamptz(6)
+  user_id      BigInt?
+  name         String?  @db.VarChar
+  last_name    String?  @db.VarChar
+  phone_number String?  @db.VarChar
+  relationship String?  @db.VarChar
+  active       Boolean?
+  alerts       alerts[]
+  users        users?   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model users {
+  id                 BigInt               @id @default(autoincrement())
+  email              String               @unique @db.VarChar
+  password           String?              @db.VarChar
+  name               String?              @db.VarChar
+  last_name          String?              @db.VarChar
+  phone_number       String?              @db.VarChar
+  created_at         DateTime             @default(now()) @db.Timestamptz(6)
+  active             Boolean?             @default(true)
+  alerts             alerts[]
+  emergency_contacts emergency_contacts[]
+}
