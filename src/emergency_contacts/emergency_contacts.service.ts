@@ -8,36 +8,41 @@ export class EmergencyContactsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createEmergencyContactDto: CreateEmergencyContactDto) {
-    const data = {
-      ...createEmergencyContactDto,
-      user_id: createEmergencyContactDto.user_id ? BigInt(createEmergencyContactDto.user_id) : undefined,
-    };
+    const existingContact = await this.prisma.emergency_contacts.findFirst({
+      where: { contact_id: createEmergencyContactDto.contact_id },
+    })
+    if (existingContact) {
+      throw new NotFoundException(`Emergency contact with ID ${createEmergencyContactDto.contact_id} already exists`);
+    }
 
     return await this.prisma.emergency_contacts.create({
-      data,
-      include: {
-        users: true,
-        alerts: true,
-      },
-    });
+      data: createEmergencyContactDto
+    })
   }
 
   async findAll() {
-    return await this.prisma.emergency_contacts.findMany({
-      include: {
-        users: true,
-        alerts: true,
-      },
-    });
+    const contacts = await this.prisma.emergency_contacts.findMany({
+      where: { active: true },
+    })
+    if (contacts.length === 0) {
+      throw new NotFoundException('No active emergency contacts found');
+    }
+    return contacts
+  }
+
+  async findByUserId(id: number){
+    const contacts = await this.prisma.emergency_contacts.findMany({
+      where: { user_id: BigInt(id), active: true },
+    })
+    if (contacts.length === 0) {
+      throw new NotFoundException(`No active emergency contacts found for user ID ${id}`);
+    }
+    return contacts;
   }
 
   async findOne(id: number) {
     const contact = await this.prisma.emergency_contacts.findUnique({
-      where: { id: BigInt(id) },
-      include: {
-        users: true,
-        alerts: true,
-      },
+      where: { id: BigInt(id), active: true },
     });
 
     if (!contact) {
@@ -49,21 +54,16 @@ export class EmergencyContactsService {
 
   async update(id: number, updateEmergencyContactDto: UpdateEmergencyContactDto) {
     const contact = await this.prisma.emergency_contacts.findUnique({
-      where: { id: BigInt(id) },
+      where: { id: BigInt(id), active: true },
     });
 
     if (!contact) {
       throw new NotFoundException(`Emergency contact with ID ${id} not found`);
     }
 
-    const data = {
-      ...updateEmergencyContactDto,
-      user_id: updateEmergencyContactDto.user_id ? BigInt(updateEmergencyContactDto.user_id) : undefined,
-    };
-
     return await this.prisma.emergency_contacts.update({
       where: { id: BigInt(id) },
-      data,
+      data: updateEmergencyContactDto
     });
   }
 

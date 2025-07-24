@@ -37,7 +37,7 @@ export class CreateUserDto {
   last_name?: string;
 
   @ApiProperty({
-    example: '+1234567890',
+    example: '1234567890',
     description: 'User phone number',
     required: false,
   })

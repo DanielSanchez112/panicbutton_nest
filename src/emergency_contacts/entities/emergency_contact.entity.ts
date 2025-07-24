@@ -54,4 +54,11 @@ export class EmergencyContact {
     required: false,
   })
   active?: boolean;
+
+  @ApiProperty({
+    example: 1,
+    description: 'Emergency contact ID from users table',
+    required: false,
+  })
+  contact_id?: bigint;
 }

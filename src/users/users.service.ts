@@ -8,27 +8,30 @@ export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createUserDto: CreateUserDto) {
+    const existingUser = await this.prisma.users.findUnique({
+      where: { email: createUserDto.email }
+    })
+    if(existingUser){
+      throw new NotFoundException(`User with email ${createUserDto.email} already exists`);
+    }
     return await this.prisma.users.create({
       data: createUserDto,
     });
   }
 
   async findAll() {
-    return await this.prisma.users.findMany({
-      include: {
-        emergency_contacts: true,
-        alerts: true,
-      },
-    });
+    const users = await this.prisma.users.findMany({
+      where: { active: true },
+    })
+    if(users.length === 0){
+      throw new NotFoundException('No active users found');
+    }
+    return users
   }
 
   async findOne(id: number) {
     const user = await this.prisma.users.findUnique({
-      where: { id: BigInt(id) },
-      include: {
-        emergency_contacts: true,
-        alerts: true,
-      },
+      where: { id: BigInt(id), active: true },
     });
 
     if (!user) {
@@ -40,7 +43,7 @@ export class UsersService {
 
   async update(id: number, updateUserDto: UpdateUserDto) {
     const user = await this.prisma.users.findUnique({
-      where: { id: BigInt(id) },
+      where: { id: BigInt(id), active: true },
     });
 
     if (!user) {

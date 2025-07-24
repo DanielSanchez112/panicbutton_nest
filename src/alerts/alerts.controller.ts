@@ -24,6 +24,14 @@ export class AlertsController {
     return await this.alertsService.findAll();
   }
 
+  @Get('user/:id')
+  @ApiOperation({ summary: 'Get alerts by user ID' })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiResponse({ status: 200, description: 'List of alerts for user', type: [Alert] })
+  async findByUserId(@Param('id') id: string) {
+    return await this.alertsService.findByUserId(+id);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get alert by ID' })
   @ApiParam({ name: 'id', description: 'Alert ID' })

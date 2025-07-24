@@ -8,45 +8,41 @@ export class AlertsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createAlertDto: CreateAlertDto) {
-    const data = {
-      ...createAlertDto,
-      user_id: createAlertDto.user_id ? BigInt(createAlertDto.user_id) : undefined,
-      contact_id: createAlertDto.contact_id ? BigInt(createAlertDto.contact_id) : undefined,
-      alert_type_id: createAlertDto.alert_type_id ? BigInt(createAlertDto.alert_type_id) : undefined,
-      dive_type_id: createAlertDto.dive_type_id ? BigInt(createAlertDto.dive_type_id) : undefined,
-    };
+    const data = await this.prisma.alerts.create({
+      data: createAlertDto 
+    })
 
-    return await this.prisma.alerts.create({
-      data,
-      include: {
-        users: true,
-        emergency_contacts: true,
-        alert_types: true,
-        device_types: true,
-      },
-    });
+    return data
   }
 
   async findAll() {
-    return await this.prisma.alerts.findMany({
+    const data = await this.prisma.alerts.findMany({
+      where: { active: true }
+    })
+    return data
+  }
+
+  async findByUserId(id: number) {
+    const alerts = await this.prisma.alerts.findMany({
+      where: { user_id: BigInt(id), active: true },
       include: {
         users: true,
         emergency_contacts: true,
-        alert_types: true,
-        device_types: true,
-      },
-    });
+      }
+    })
+    if (alerts.length === 0) {
+      throw new NotFoundException(`No active alerts found for user ID ${id}`);
+    }
+    return alerts;
   }
 
   async findOne(id: number) {
     const alert = await this.prisma.alerts.findUnique({
-      where: { id: BigInt(id) },
-      include: {
+      where: { id: BigInt(id), active: true },
+      include:{
         users: true,
-        emergency_contacts: true,
-        alert_types: true,
-        device_types: true,
-      },
+        emergency_contacts: true
+      }
     });
 
     if (!alert) {
@@ -58,24 +54,16 @@ export class AlertsService {
 
   async update(id: number, updateAlertDto: UpdateAlertDto) {
     const alert = await this.prisma.alerts.findUnique({
-      where: { id: BigInt(id) },
+      where: { id: BigInt(id), active: true },
     });
 
     if (!alert) {
       throw new NotFoundException(`Alert with ID ${id} not found`);
     }
 
-    const data = {
-      ...updateAlertDto,
-      user_id: updateAlertDto.user_id ? BigInt(updateAlertDto.user_id) : undefined,
-      contact_id: updateAlertDto.contact_id ? BigInt(updateAlertDto.contact_id) : undefined,
-      alert_type_id: updateAlertDto.alert_type_id ? BigInt(updateAlertDto.alert_type_id) : undefined,
-      dive_type_id: updateAlertDto.dive_type_id ? BigInt(updateAlertDto.dive_type_id) : undefined,
-    };
-
     return await this.prisma.alerts.update({
       where: { id: BigInt(id) },
-      data,
+      data: updateAlertDto,
     });
   }
 

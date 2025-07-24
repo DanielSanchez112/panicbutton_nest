@@ -24,6 +24,14 @@ export class EmergencyContactsController {
     return await this.emergencyContactsService.findAll();
   }
 
+  @Get('user/:id')
+  @ApiOperation({ summary: 'Get emergency contacts by user ID' })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiResponse({ status: 200, description: 'List of emergency contacts for user', type: [EmergencyContact] })
+  async findByUserId(@Param('id') id: string) {
+    return await this.emergencyContactsService.findByUserId(+id);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get emergency contact by ID' })
   @ApiParam({ name: 'id', description: 'Emergency contact ID' })

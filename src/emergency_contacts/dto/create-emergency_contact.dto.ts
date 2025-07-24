@@ -30,7 +30,7 @@ export class CreateEmergencyContactDto {
   last_name?: string;
 
   @ApiProperty({
-    example: '+1234567890',
+    example: '1234567890',
     description: 'Contact phone number',
     required: false,
   })
@@ -56,4 +56,13 @@ export class CreateEmergencyContactDto {
   @IsOptional()
   @IsBoolean()
   active?: boolean;
+
+  @ApiProperty({
+    example: 1,
+    description: 'Emergency contact ID from users table',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  contact_id?: number
 }
