@@ -9,6 +9,7 @@ import { DeviceTypesModule } from './device-types/device-types.module';
 import { AlertTypesModule } from './alert-types/alert-types.module';
 import { AuthModule } from './auth/auth.module';
 import { TestModule } from './test/test.module';
+import { MqttModule } from './mqtt/mqtt.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
 @Module({
@@ -19,6 +20,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
         PrismaModule,
         AuthModule,
         TestModule,
+        MqttModule,
         UsersModule, 
         AlertsModule, 
         EmergencyContactsModule, 
