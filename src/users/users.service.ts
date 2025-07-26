@@ -5,7 +5,9 @@ import { PrismaService } from '../prisma.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+  ) {}
 
   async create(createUserDto: CreateUserDto) {
     const existingUser = await this.prisma.users.findUnique({
@@ -14,6 +16,7 @@ export class UsersService {
     if(existingUser){
       throw new NotFoundException(`User with email ${createUserDto.email} already exists`);
     }
+
     return await this.prisma.users.create({
       data: createUserDto,
     });

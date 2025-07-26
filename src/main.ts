@@ -28,6 +28,16 @@ async function bootstrap() {
     .setTitle('Panic Button API documentation')
     .setDescription('API documentation for the Panic Button application')
     .setVersion('1.0')
+    .addBearerAuth(
+      {
+        description: 'JWT Authorization header using the Bearer scheme.',
+        type: 'http',
+        in: 'header',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      },
+      'JWT-auth',
+    )
     .build();
     
   const documentFactory = () => SwaggerModule.createDocument(app, config);
