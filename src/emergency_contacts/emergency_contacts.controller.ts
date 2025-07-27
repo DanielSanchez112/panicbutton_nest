@@ -1,11 +1,13 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { EmergencyContactsService } from './emergency_contacts.service';
 import { CreateEmergencyContactDto } from './dto/create-emergency_contact.dto';
 import { UpdateEmergencyContactDto } from './dto/update-emergency_contact.dto';
 import { EmergencyContact } from './entities/emergency_contact.entity';
+import { Public } from 'src/auth/decorators/public.decorator';
 
 @ApiTags('emergency-contacts')
+@Public()
 @Controller('emergency-contacts')
 export class EmergencyContactsController {
   constructor(private readonly emergencyContactsService: EmergencyContactsService) {}

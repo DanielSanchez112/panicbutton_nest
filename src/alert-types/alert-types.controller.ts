@@ -4,8 +4,10 @@ import { AlertTypesService } from './alert-types.service';
 import { CreateAlertTypeDto } from './dto/create-alert-type.dto';
 import { UpdateAlertTypeDto } from './dto/update-alert-type.dto';
 import { AlertType } from './entities/alert-type.entity';
+import { Public } from 'src/auth/decorators/public.decorator';
 
 @ApiTags('alert-types')
+@Public()
 @Controller('alert-types')
 export class AlertTypesController {
   constructor(private readonly alertTypesService: AlertTypesService) {}

@@ -4,8 +4,10 @@ import { DeviceTypesService } from './device-types.service';
 import { CreateDeviceTypeDto } from './dto/create-device-type.dto';
 import { UpdateDeviceTypeDto } from './dto/update-device-type.dto';
 import { DeviceType } from './entities/device-type.entity';
+import { Public } from 'src/auth/decorators/public.decorator';
 
 @ApiTags('device-types')
+@Public()
 @Controller('device-types')
 export class DeviceTypesController {
   constructor(private readonly deviceTypesService: DeviceTypesService) {}
