@@ -55,7 +55,7 @@ export class CreateEmergencyContactDto {
   })
   @IsOptional()
   @IsBoolean()
-  active?: boolean;
+  active?: boolean = true;
 
   @ApiProperty({
     example: 1,

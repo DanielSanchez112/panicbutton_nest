@@ -11,7 +11,7 @@ export class EmergencyContactsService {
     const existingContact = await this.prisma.emergency_contacts.findFirst({
       where: { contact_id: createEmergencyContactDto.contact_id },
     })
-    if (existingContact) {
+    if (existingContact && existingContact.contact_id !== null) {
       throw new NotFoundException(`Emergency contact with ID ${createEmergencyContactDto.contact_id} already exists`);
     }
 

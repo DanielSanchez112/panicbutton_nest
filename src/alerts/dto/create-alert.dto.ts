@@ -73,7 +73,7 @@ export class CreateAlertDto {
   })
   @IsOptional()
   @IsBoolean()
-  active?: boolean;
+  active?: boolean = true;
 
   @ApiProperty({
     example: false,
