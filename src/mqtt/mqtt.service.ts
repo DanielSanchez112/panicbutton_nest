@@ -60,13 +60,13 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
       const username = this.configService.get<string>('MQTT_USERNAME');
       const password = this.configService.get<string>('MQTT_PASSWORD');
 
-      this.logger.log(`Intentando conectar al broker MQTT: ${brokerUrl}`);
+      this.logger.log(`🔌 Intentando conectar al broker MQTT: ${brokerUrl}`);
 
       const options: mqtt.IClientOptions = {
         clientId,
         clean: true,
-        connectTimeout: 4000,
-        reconnectPeriod: 1000,
+        connectTimeout: 10000, // 10 segundos para conexión inicial
+        reconnectPeriod: 30000, // 30 segundos entre intentos de reconexión
         keepalive: 60,
         reschedulePings: true,
       };
@@ -74,9 +74,9 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
       if (username && password) {
         options.username = username;
         options.password = password;
-        this.logger.log('Usando autenticación con usuario y contraseña');
+        this.logger.log('🔐 Usando autenticación con usuario y contraseña');
       } else {
-        this.logger.log('Conectando sin autenticación');
+        this.logger.log('🔓 Conectando sin autenticación');
       }
 
       this.client = mqtt.connect(brokerUrl, options);
@@ -84,16 +84,20 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
       this.client.on('connect', () => {
         this.isConnected = true;
         this.logger.log(`✅ Conectado exitosamente al broker MQTT: ${brokerUrl} con ID: ${clientId}`);
+        
+        // Suscribirse a los tópicos principales automáticamente
+        this.subscribeToMainTopics();
       });
 
       this.client.on('error', (error) => {
         this.isConnected = false;
         this.logger.error(`❌ Error en la conexión MQTT: ${error.message}`);
+        this.logger.warn('⏳ El servidor continuará funcionando y reintentará la conexión MQTT en 30 segundos...');
       });
 
       this.client.on('offline', () => {
         this.isConnected = false;
-        this.logger.warn('⚠️ Cliente MQTT desconectado (offline)');
+        this.logger.warn('⚠️ Cliente MQTT desconectado (offline) - reintentando conexión en 30 segundos...');
       });
 
       this.client.on('reconnect', () => {
@@ -102,7 +106,7 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
 
       this.client.on('close', () => {
         this.isConnected = false;
-        this.logger.warn('🔒 Conexión MQTT cerrada');
+        this.logger.warn('🔒 Conexión MQTT cerrada - reintentando en 30 segundos...');
       });
 
       this.client.on('message', (topic, payload, packet) => {
@@ -114,26 +118,35 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
         });
       });
 
-      // Esperar a que se establezca la conexión
-      await new Promise<void>((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          reject(new Error('Timeout al conectar con el broker MQTT'));
-        }, 5000);
+      // Intentar conexión inicial sin bloquear el servidor
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            this.logger.warn('⏰ Timeout en conexión inicial MQTT - el servidor continuará sin MQTT');
+            this.logger.log('🔄 El cliente MQTT continuará intentando reconectar automáticamente cada 30 segundos');
+            resolve(); // Resolver en lugar de rechazar para no bloquear el servidor
+          }, 10000);
 
-        this.client.once('connect', () => {
-          clearTimeout(timeout);
-          resolve();
-        });
+          this.client.once('connect', () => {
+            clearTimeout(timeout);
+            resolve();
+          });
 
-        this.client.once('error', (error) => {
-          clearTimeout(timeout);
-          reject(error);
+          this.client.once('error', (error) => {
+            clearTimeout(timeout);
+            this.logger.warn(`⚠️ Error en conexión inicial MQTT: ${error.message} - el servidor continuará sin MQTT`);
+            resolve(); // Resolver en lugar de rechazar para no bloquear el servidor
+          });
         });
-      });
+      } catch (error) {
+        this.logger.warn(`⚠️ No se pudo conectar al broker MQTT inicialmente: ${error.message}`);
+        this.logger.log('🔄 El cliente MQTT continuará intentando reconectar automáticamente cada 30 segundos');
+      }
 
     } catch (error) {
-      this.logger.error(`Error al conectar con el broker MQTT: ${error.message}`);
-      throw error;
+      this.logger.error(`❌ Error fatal al configurar cliente MQTT: ${error.message}`);
+      this.logger.warn('⚠️ El servidor continuará funcionando sin MQTT');
+      // No lanzar el error para evitar que cierre el servidor
     }
   }
 
@@ -146,6 +159,31 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
           resolve();
         });
       });
+    }
+  }
+
+  private async subscribeToMainTopics(): Promise<void> {
+    if (!this.isConnected) {
+      this.logger.warn('⚠️ No se puede suscribir a tópicos: cliente MQTT no conectado');
+      return;
+    }
+
+    try {
+      const mainTopics = [
+        'panicbutton/+/alerts/+',
+        'panicbutton/+/location',
+        'panicbutton/+/status',
+        'panicbutton/devices/+/status',
+        'panicbutton/system/+'
+      ];
+
+      for (const topic of mainTopics) {
+        await this.subscribe(topic, { qos: 1 });
+      }
+
+      this.logger.log('📡 Suscrito a todos los tópicos principales');
+    } catch (error) {
+      this.logger.error(`❌ Error al suscribirse a tópicos principales: ${error.message}`);
     }
   }
 
