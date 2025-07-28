@@ -83,7 +83,10 @@ export class AlertsService {
 
 
   async create(createAlertDto: CreateAlertDto) {
-    const data = await this.prisma.alerts.create({data: createAlertDto})
+    const { real_time_url, ...restData } = createAlertDto;
+    const URL = real_time_url || '(link not available)'
+
+    const data = await this.prisma.alerts.create({data: restData})
     const alertType = await this.prisma.alert_types.findUnique({ where: { id: createAlertDto.alert_type_id } });
     const deviceType = await this.prisma.device_types.findUnique({ where: { id: createAlertDto.dive_type_id } });
     const emergencyContacts = await this.prisma.emergency_contacts.findMany({where: { user_id: createAlertDto.user_id },});
@@ -98,16 +101,13 @@ export class AlertsService {
     const sanitizedAlertType = this.sanitizeAndTruncateForSms(alertType.name, 15); // Limita el tipo de alerta
     const sanitizedDescription = this.sanitizeAndTruncateForSms(alertType.description, 70); // Limita la descripción a 70 caracteres
 
-    // La URL aún no está generada, así que la mantenemos como un placeholder
-    const realTimeViewPlaceholder = "(link aqui)"; // Esto contará como 11 caracteres
 
     const messageContent = `ALERTA!
 ${sanitizedUserName}
 Tipo: ${sanitizedAlertType}
 Info: ${sanitizedDescription}
 Ubicacion: ${createAlertDto.location_lat},${createAlertDto.location_lng}
-Ver: ${realTimeViewPlaceholder}
-
+Ver: ${URL}
 `;
 
     this.logger.debug(`SMS message content before sending:\n${messageContent}`);

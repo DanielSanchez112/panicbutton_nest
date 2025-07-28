@@ -83,4 +83,12 @@ export class CreateAlertDto {
   @IsOptional()
   @IsBoolean()
   call_made?: boolean;
+
+  @ApiProperty({
+  description: 'URL for real-time view (used only for SMS, not stored)',
+  example: 'https://app.panicbutton.com/alert/123/view',
+  required: false
+  })
+  @IsOptional()
+  real_time_url?: string = '(link not available)';
 }
