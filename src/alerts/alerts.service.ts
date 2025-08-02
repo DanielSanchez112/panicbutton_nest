@@ -5,7 +5,6 @@ import { PrismaService } from '../prisma.service';
 import { ConfigService } from '@nestjs/config';
 import { Vonage } from '@vonage/server-sdk';
 import { Auth } from '@vonage/auth';
-import e from 'express';
 
 @Injectable()
 export class AlertsService {
@@ -107,7 +106,8 @@ ${sanitizedUserName}
 Tipo: ${sanitizedAlertType}
 Info: ${sanitizedDescription}
 Ubicacion: ${createAlertDto.location_lat},${createAlertDto.location_lng}
-Ver: ${URL}
+Ver mapa: ${URL}
+
 `;
 
     this.logger.debug(`SMS message content before sending:\n${messageContent}`);
